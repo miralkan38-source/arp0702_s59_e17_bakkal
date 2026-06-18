@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl" class="h-full">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>بوابة الأنشطة التفاعلية</title>
+    <!-- Google Fonts: Cairo for clean Arabic typography -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght=400;600;700;800&display=swap" rel="stylesheet">
+    <!-- Tailwind CSS for lightweight responsive design -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['arakom', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            font-family: 'arakom', sans-serif;
+        }
+    </style>
+</head>
+<body class="bg-gray-100 text-gray-800 min-h-full flex flex-col justify-between">
+
+    <!-- Main Container -->
+    <main class="flex-grow max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-10 lg:py-12 w-full flex flex-col justify-center">
+        
+        <!-- Top Instruction Card / Yönerge Alanı -->
+        <div class="bg-white rounded-2xl p-5 sm:p-6 md:p-8 shadow-sm border border-gray-200/60 mb-6 sm:mb-8 lg:mb-10 text-center max-w-4xl mx-auto w-full">
+            <h1 class="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-normal text-gray-900 mb-2 sm:mb-3">
+                اُنْقُرْ عَلى الصّورَتَيْن.
+            </h1>
+        </div>
+
+        <!-- Activities Grid (2 Cards) - Mobil & Tablet: Alt alta (1 Sütun), Masaüstü (PC): Yan yana (2 Sütun) -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 sm:gap-8 lg:gap-10 max-w-lg mx-auto lg:max-w-4xl w-full">
+
+            <!-- Card 1 / Birinci Etkinlik -->
+            <a href="c/index.html" 
+               class="activity-card group bg-white rounded-2xl overflow-hidden border border-gray-200 shadow-sm hover:shadow-md transition-all duration-200 flex flex-col h-full hover:-translate-y-1">
+                <!-- Image Container (En boy oranı 4:3) -->
+                <div class="relative aspect-[16/9] w-full overflow-hidden bg-gray-50 border-b border-gray-100">
+                    <img src="e1.png" alt="النشاط الأول" onerror="this.onerror=null; this.src='https://placehold.co/600x450/f3f4f6/9ca3af?text=+''" class="w-full h-full object-cover">
+                </div>
+                <!-- Title & Footer Area -->
+                <div class="p-5 sm:p-6 flex-grow flex flex-col justify-between text-center">
+                    <h3 class="font-bold text-gray-800 group-hover:text-emerald-600 transition-colors text-lg sm:text-xl lg:text-2xl leading-snug">
+                        النَّشاط الأَوَّل
+                    </h3>
+                </div>
+            </a>
+
+            <!-- Card 2 / İkinci Etkinlik -->
+            <a href="k/index.html" 
+               class="activity-card group bg-white rounded-2xl overflow-hidden border border-gray-200 shadow-sm hover:shadow-md transition-all duration-200 flex flex-col h-full hover:-translate-y-1">
+                <!-- Image Container (En boy oranı 4:3) -->
+                <div class="relative aspect-[16/9] w-full overflow-hidden bg-gray-50 border-b border-gray-100">
+                    <img src="e4.png" alt="النشاط الرابع" onerror="this.onerror=null; this.src='https://placehold.co/600x450/f3f4f6/9ca3af?text=+''" class="w-full h-full object-cover">
+                </div>
+                <!-- Title & Footer Area -->
+                <div class="p-5 sm:p-6 flex-grow flex flex-col justify-between text-center">
+                    <h3 class="font-bold text-gray-800 group-hover:text-emerald-600 transition-colors text-lg sm:text-xl lg:text-2xl leading-snug">
+                        النَّشاط الثّاني
+                    </h3>
+                </div>
+            </a>
+        </div>
+    </main>
+</body>
+</html>

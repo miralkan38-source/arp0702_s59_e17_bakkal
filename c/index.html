@@ -1,0 +1,415 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>لُعْبَة عَجَلَة البَقّالَة</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @font-face {
+            font-family: 'arakom';
+            src: url('arakom.ttf') format('truetype');
+            font-weight: normal;
+            font-style: normal;
+        }
+
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+Arabic:wght@400;700&display=swap');
+
+        html, body {
+            height: 100%;
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+            background-color: #f0fdf4;
+            font-family: 'arakom', 'Noto Sans Arabic', sans-serif;
+        }
+
+        /* 1920x1080 Düzeni */
+        .game-wrapper {
+            height: 100vh;
+            width: 100vw;
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+            justify-content: space-around;
+            padding: 2vh 4vw;
+            box-sizing: border-box;
+        }
+
+        /* Sol Bilgi Paneli */
+        .info-panel {
+            width: 35%;
+            height: 85vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            gap: 3vh;
+            background: rgba(255, 255, 255, 0.5);
+            border-radius: 3rem;
+            padding: 2rem;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.05);
+        }
+
+        /* Sağ Etkileşim Paneli (Çark veya Test) */
+        .action-panel {
+            width: 55%;
+            height: 85vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+        }
+
+        /* Çark Kapsayıcısı */
+        .wheel-container {
+            position: relative;
+            width: 70vh;
+            height: 70vh;
+        }
+
+        #wheel-canvas {
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            box-shadow: 0 0 50px rgba(0,0,0,0.15), 0 0 0 15px white;
+            transition: transform 4s cubic-bezier(0.15, 0, 0.15, 1);
+        }
+
+        /* Çark İbresi */
+        .pointer {
+            position: absolute;
+            top: -20px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 50px;
+            height: 60px;
+            background: #ef4444;
+            clip-path: polygon(50% 100%, 0 0, 100% 0);
+            z-index: 20;
+            filter: drop-shadow(0 4px 4px rgba(0,0,0,0.2));
+        }
+
+        /* Test Kartı - Çerçeve büyütüldü */
+        .quiz-card {
+            background: white;
+            width: 98%;
+            height: 98%;
+            border-radius: 3rem;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: space-around;
+            padding: 1.5rem;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            border: 10px solid #10b981;
+            animation: slideUp 0.5s ease-out;
+            box-sizing: border-box;
+        }
+
+        @keyframes slideUp {
+            from { transform: translateY(50px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        /* Şık butonlarının yazı boyutu maksimum yapıldı, harakatların kesilmemesi için ayarlandı */
+        .option-btn {
+            width: 100%;
+            padding: 0.8rem 1.2rem;
+            font-size: 3.2rem; /* Yazı boyutu maksimuma çıkarıldı */
+            font-weight: normal; /* Normal font ağırlığı uygulandı */
+            border-radius: 1.5rem;
+            border: 3px solid #e2e8f0;
+            background: #f8fafc;
+            transition: all 0.2s;
+            text-align: center;
+            line-height: 1.3; /* Arapça harekelerin sığması için ideal satır yüksekliği */
+            word-wrap: break-word;
+        }
+
+        .option-btn:hover { background: #f1f5f9; border-color: #cbd5e1; }
+        .option-btn.correct { background: #10b981; color: white; border-color: #059669; }
+        .option-btn.wrong { background: #ef4444; color: white; border-color: #b91c1c; }
+
+        h1, h2, h3, button { font-family: 'arakom', 'Noto Sans Arabic', sans-serif; }
+
+        .hidden { display: none !important; }
+    </style>
+</head>
+<body>
+
+    <div class="game-wrapper">
+        
+        <!-- SAĞ PANEL: ETKİLEŞİM -->
+        <div class="action-panel">
+            
+            <!-- ÇARK EKRANI -->
+            <div id="wheel-view" class="wheel-container">
+                <div class="pointer"></div>
+                <canvas id="wheel-canvas" width="800" height="800"></canvas>
+                <button id="spin-btn" class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-white text-emerald-600 rounded-full w-24 h-24 font-bold text-2xl shadow-xl border-4 border-emerald-500 hover:scale-110 transition-transform z-30">اِضْغَطْ</button>
+            </div>
+
+            <!-- TEST EKRANI -->
+            <div id="quiz-view" class="quiz-card hidden">
+                <div class="w-2/3 h-2/5 flex items-center justify-center bg-gray-50 rounded-3xl p-4 mb-2">
+                    <img id="quiz-img" src="" alt="Vegetable" class="max-w-full max-h-full object-contain">
+                </div>
+                <div class="grid grid-cols-1 gap-3 w-full px-4">
+                    <button class="option-btn" onclick="checkAnswer(0)"></button>
+                    <button class="option-btn" onclick="checkAnswer(1)"></button>
+                    <button class="option-btn" onclick="checkAnswer(2)"></button>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- SOL PANEL: BİLGİ -->
+        <div class="info-panel">
+            <h1 class="text-4xl font-bold text-emerald-700 mb-2">عَجَلَة البَقّالَة</h1>
+            
+            <div class="flex gap-4 w-full">
+                <div class="bg-white flex-1 p-6 rounded-3xl shadow-sm border-b-4 border-green-200 text-center">
+                    <p class="text-lg text-gray-400 font-bold mb-1">النَّتيجَة</p>
+                    <p id="score" class="text-6xl font-bold text-green-600">0</p>
+                </div>
+            </div>
+
+            <div class="bg-emerald-600 text-white p-8 rounded-[2.5rem] w-full text-center shadow-lg border-b-8 border-emerald-800">
+                <p id="status-msg" class="text-3xl opacity-90">قُمْ بِتَدْوير العَجَلَة لِاخْتِيار سُؤال.</p>
+            </div>
+
+            <!-- EN UYARLANMIŞ, ORTALANMIŞ VE BÜYÜTÜLMÜŞ HOME (ANA SAYFA) TUŞU -->
+            <a href="../index.html" class="flex items-center justify-center gap-1 bg-slate-600 hover:bg-slate-700 text-white font-bold py-5 px-12 rounded-[2rem] text-3xl shadow-md transition-all active:scale-95 w-full mt-2">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-10 w-10" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+                </svg>
+                <span></span>
+            </a>
+        </div>
+
+        <!-- BAŞLANGIÇ EKRANI (DENGELİ VE OPTİMİZE BOYUTLARLA KÜÇÜLTÜLDÜ) -->
+        <div id="overlay" class="fixed inset-0 bg-slate-900/90 backdrop-blur-md flex items-center justify-center z-50 p-6 overflow-y-auto">
+            <div class="bg-white rounded-[3rem] p-[3rem] max-w-[40rem] w-full text-center shadow-2xl my-auto">
+                <div id="modal-content">
+                    <div class="text-[8rem] mb-6 leading-none">🎡</div>
+                    <h3 class="text-[2.5rem] font-bold mb-4 text-emerald-800">لُعْبَة العَجَلَة</h3>
+                    <p class="text-[2.5rem] text-gray-600 mb-[4rem]">دَوِّر العَجَلَة وَأَجِبْ عَن الأَسْئِلَة!</p>
+                    <button id="start-btn" class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-5 px-12 rounded-[3rem] text-[3rem] transition-all w-full shadow-lg active:scale-95 leading-normal">
+                        اِبْدَأ الآن
+                    </button>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        const SoundFX = {
+            ctx: null,
+            init() { if (!this.ctx) this.ctx = new (window.AudioContext || window.webkitAudioContext)(); },
+            play(freq, type, duration, vol = 0.1) {
+                this.init();
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+                osc.type = type;
+                osc.frequency.setValueAtTime(freq, this.ctx.currentTime);
+                gain.gain.setValueAtTime(vol, this.ctx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + duration);
+                osc.connect(gain); gain.connect(this.ctx.destination);
+                osc.start(); osc.stop(this.ctx.currentTime + duration);
+            },
+            click() { this.play(600, 'sine', 0.1, 0.05); },
+            correct() { this.play(523, 'sine', 0.1); setTimeout(() => this.play(659, 'sine', 0.2), 50); },
+            wrong() { this.play(220, 'square', 0.3, 0.05); },
+            victory() { [523, 659, 783, 1046].forEach((n, i) => setTimeout(() => this.play(n, 'sine', 0.4), i * 150)); }
+        };
+
+        const allData = [
+            { word: 'حَليب', img: 'S57_SÜT.png' },
+            { word: 'سُكَّر', img: 'S57_ŞEKETBİRPAKET.png' },
+            { word: 'مِلْح', img: 'S57_TUZ.png' },
+            { word: 'ماء', img: 'S57_SU.png' },
+            { word: 'خُبْز', img: 'S57_EKMEK.png' },
+            { word: 'شاي', img: 'S57_BİRPAKETYEŞİLÇAY.png' },
+            { word: 'عَسَل', img: 'S57_BAL.png' },
+        ];
+
+        let remainingItems = [...allData];
+        let currentQuizItem = null;
+        let score = 0;
+        let isSpinning = false;
+        let rotation = 0;
+
+        const canvas = document.getElementById('wheel-canvas');
+        const ctx = canvas.getContext('2d');
+        const spinBtn = document.getElementById('spin-btn');
+        const overlay = document.getElementById('overlay');
+        const quizView = document.getElementById('quiz-view');
+        const wheelView = document.getElementById('wheel-view');
+        const statusMsg = document.getElementById('status-msg');
+
+        const images = {};
+        allData.forEach(item => {
+            const img = new Image();
+            img.src = item.img;
+            images[item.img] = img;
+        });
+
+        function drawWheel() {
+            const numSegments = remainingItems.length;
+            const angle = (Math.PI * 2) / numSegments;
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            remainingItems.forEach((item, i) => {
+                const segmentAngle = i * angle;
+                
+                ctx.beginPath();
+                ctx.moveTo(400, 400);
+                ctx.arc(400, 400, 400, segmentAngle, segmentAngle + angle);
+                ctx.fillStyle = i % 2 === 0 ? '#10b981' : '#34d399';
+                ctx.fill();
+                ctx.lineWidth = 4;
+                ctx.strokeStyle = 'white';
+                ctx.stroke();
+
+                ctx.save();
+                ctx.translate(400, 400);
+                ctx.rotate(segmentAngle + angle / 2);
+                const img = images[item.img];
+                if (img && img.complete) {
+                    // Çarktaki görseller büyütüldü (100x100 -> 140x140) ve mükemmelce ortalandı
+                    ctx.drawImage(img, 180, -70, 140, 140);
+                }
+                ctx.restore();
+            });
+
+            ctx.beginPath();
+            ctx.arc(400, 400, 40, 0, Math.PI * 2);
+            ctx.fillStyle = 'white';
+            ctx.fill();
+        }
+
+        function spin() {
+            if (isSpinning || remainingItems.length === 0) return;
+
+            if (remainingItems.length === 1) {
+                currentQuizItem = remainingItems[0];
+                startQuiz();
+                return;
+            }
+
+            isSpinning = true;
+            SoundFX.click();
+            
+            const spinRotation = 2000 + Math.random() * 2000;
+            rotation += spinRotation;
+            canvas.style.transform = `rotate(${rotation}deg)`;
+
+            setTimeout(() => {
+                isSpinning = false;
+                const actualDeg = rotation % 360;
+                const segmentAngle = 360 / remainingItems.length;
+                const adjustedDeg = (360 - (actualDeg % 360) + 270) % 360; 
+                const selectedIndex = Math.floor(adjustedDeg / segmentAngle);
+                
+                currentQuizItem = remainingItems[selectedIndex];
+                startQuiz();
+            }, 4000);
+        }
+
+        function startQuiz() {
+            wheelView.classList.add('hidden');
+            quizView.classList.remove('hidden');
+            statusMsg.textContent = "اِخْتَر الجَواب الصَّحيح حَسَب الصّورَة.";
+
+            document.getElementById('quiz-img').src = currentQuizItem.img;
+
+            let distractors = allData.filter(d => d.word !== currentQuizItem.word);
+            distractors = distractors.sort(() => 0.5 - Math.random()).slice(0, 2);
+            
+            const options = [
+                { word: currentQuizItem.word, correct: true },
+                { word: distractors[0].word, correct: false },
+                { word: distractors[1].word, correct: false }
+            ].sort(() => 0.5 - Math.random());
+
+            const btns = document.querySelectorAll('.option-btn');
+            btns.forEach((btn, i) => {
+                btn.textContent = options[i].word;
+                btn.dataset.correct = options[i].correct;
+                btn.className = 'option-btn';
+                btn.disabled = false;
+            });
+        }
+
+        function checkAnswer(index) {
+            const btns = document.querySelectorAll('.option-btn');
+            const selectedBtn = btns[index];
+            const isCorrect = selectedBtn.dataset.correct === 'true';
+
+            btns.forEach(b => b.disabled = true);
+
+            if (isCorrect) {
+                SoundFX.correct();
+                selectedBtn.classList.add('correct');
+                score += 10;
+                document.getElementById('score').textContent = score;
+                
+                remainingItems = remainingItems.filter(item => item.word !== currentQuizItem.word);
+
+                setTimeout(() => {
+                    if (remainingItems.length === 0) {
+                        endGame();
+                    } else {
+                        backToWheel();
+                    }
+                }, 1500);
+            } else {
+                SoundFX.wrong();
+                selectedBtn.classList.add('wrong');
+                setTimeout(() => {
+                    btns.forEach(b => b.disabled = false);
+                    selectedBtn.classList.remove('wrong');
+                }, 1000);
+            }
+        }
+
+        function backToWheel() {
+            quizView.classList.add('hidden');
+            wheelView.classList.remove('hidden');
+            statusMsg.textContent = "قُم بِتَدْوير العَجَلَة.";
+            drawWheel();
+        }
+
+        function endGame() {
+            SoundFX.victory();
+            document.getElementById('overlay').classList.remove('hidden');
+            document.getElementById('modal-content').innerHTML = `
+                <div class="text-8xl mb-6">🏆</div>
+                <h3 class="text-4xl font-bold mb-4 text-emerald-800">أَحْسَنْت!</h3>
+                <p class="text-2xl text-gray-600 mb-10"><br>المَجْموع: <span class="font-bold text-emerald-600">${score}</span></p>
+                <button onclick="location.reload()" class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-5 px-12 rounded-full text-3xl shadow-lg">إِعادَة اللَّعِب</button>
+            `;
+        }
+
+        spinBtn.addEventListener('click', spin);
+        
+        // Başla butonuna tıklanınca c1.mp3 çaldırma eylemi
+        document.getElementById('start-btn').addEventListener('click', () => {
+            const startAudio = new Audio('c1.mp3');
+            startAudio.play().catch(err => {
+                console.log("Ses oynatılamadı:", err);
+            });
+
+            overlay.classList.add('hidden');
+            SoundFX.init();
+            drawWheel();
+        });
+
+        window.onload = () => {
+            setTimeout(drawWheel, 500);
+        };
+    </script>
+</body>
+</html>

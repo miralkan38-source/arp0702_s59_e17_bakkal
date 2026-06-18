@@ -1,0 +1,468 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>اِخْتَر الصّورَة الصَّحيحَة حَسَب الكَلِمَة.</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @font-face {
+            font-family: 'arakom';
+            src: url('arakom.ttf') format('truetype');
+            font-weight: normal;
+            font-style: normal;
+        }
+
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+Arabic:wght=400;700&display=swap');
+
+        /* Ekranın kaymasını engelleyen temel ayarlar */
+        html, body {
+            height: 100%;
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+            background-color: #f8fafc;
+            font-family: 'arakom', 'Noto Sans Arabic', sans-serif;
+        }
+
+        /* 1920x1080 Yatay Düzen (Side-by-Side) */
+        .game-wrapper {
+            height: 100vh;
+            width: 100vw;
+            display: flex;
+            flex-direction: row; /* Yan yana dizilim */
+            align-items: center;
+            justify-content: space-around;
+            padding: 2vh 4vw;
+            box-sizing: border-box;
+        }
+
+        /* Sol Panel (Bilgi alanı) */
+        .info-panel {
+            width: 40%;
+            height: 85vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            gap: 2.5vh;
+        }
+
+        /* Sağ Panel (Oyun alanı) */
+        .game-panel {
+            width: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        /* Başlık alanı */
+        header {
+            width: 100%;
+            text-align: center;
+        }
+
+        /* Hedef kelime kartı */
+        .target-container {
+            width: 100%;
+            height: 25vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            background-color: #059669;
+            border-radius: 2rem;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+            border-bottom: 8px solid #047857;
+        }
+
+        /* 3x3 Oyun Alanı - Sağ Taraf */
+        .grid-area {
+            height: 75vh;
+            aspect-ratio: 1 / 1;
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            grid-template-rows: repeat(3, 1fr);
+            gap: 2vh;
+            background-color: #fef3c7;
+            padding: 3vh;
+            border-radius: 3rem;
+            box-shadow: inset 0 6px 15px rgba(0,0,0,0.05);
+            border-bottom: 10px solid #fde68a;
+        }
+
+        /* Delik Tasarımı - İçi Beyaz */
+        .hole {
+            background: #ffffff; /* Delik içi beyaz */
+            border-radius: 50%;
+            position: relative;
+            overflow: hidden;
+            box-shadow: inset 0 4px 8px rgba(0,0,0,0.1), 0 2px 4px rgba(0,0,0,0.05);
+            width: 100%;
+            height: 100%;
+            border: 4px solid #e2e8f0;
+        }
+
+        .item {
+            position: absolute;
+            bottom: -100%;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: bottom 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            user-select: none;
+            padding: 10%;
+            z-index: 10;
+        }
+
+        .item img {
+            max-width: 90%;
+            max-height: 90%;
+            object-fit: contain;
+            pointer-events: none;
+        }
+
+        .item.up {
+            bottom: 0;
+        }
+
+        .message-area {
+            height: 6vh;
+            font-weight: bold;
+            font-size: 1.5rem;
+            text-align: center;
+        }
+
+        @keyframes bounce {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+        }
+        .correct-animation { animation: bounce 0.5s ease-in-out; }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-5px); }
+            75% { transform: translateX(5px); }
+        }
+        .wrong-shake { animation: shake 0.3s ease-in-out; }
+
+        h1, h2, h3, button, a, .status-text {
+            font-family: 'arakom', 'Noto Sans Arabic', sans-serif;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="game-wrapper">
+        <!-- SAĞ TARAF: OYUN ALANI (RTL olduğu için ilk çocuk sağda görünür) -->
+        <div class="game-panel">
+            <div class="grid-area">
+                <div class="hole"><div class="item"></div></div>
+                <div class="hole"><div class="item"></div></div>
+                <div class="hole"><div class="item"></div></div>
+                <div class="hole"><div class="item"></div></div>
+                <div class="hole"><div class="item"></div></div>
+                <div class="hole"><div class="item"></div></div>
+                <div class="hole"><div class="item"></div></div>
+                <div class="hole"><div class="item"></div></div>
+                <div class="hole"><div class="item"></div></div>
+            </div>
+        </div>
+
+        <!-- SOL TARAF: BİLGİ PANELİ -->
+        <div class="info-panel">
+            <header>
+                <h1 class="text-3xl font-bold text-emerald-600 mb-4">اِخْتَر الصّورَة الصَّحيحَة حَسَب الكَلِمَة.</h1>
+                <div class="flex justify-center gap-6 w-full">
+                    <div class="bg-white flex-1 p-3 rounded-2xl shadow-sm border-b-4 border-green-200 text-center max-w-[150px]">
+                        <p class="text-sm text-gray-400 font-bold">النَّتيجَة</p>
+                        <p id="score" class="text-2xl font-bold text-green-600">0</p>
+                    </div>
+                    <div class="bg-white flex-1 p-3 rounded-2xl shadow-sm border-b-4 border-red-200 text-center max-w-[150px]">
+                        <p class="text-sm text-gray-400 font-bold">الوَقْت</p>
+                        <p id="timer" class="text-2xl font-bold text-red-600">60</p>
+                    </div>
+                </div>
+            </header>
+
+            <!-- HEDEF KELİME KUTUSU -->
+            <div class="target-container text-white px-6">
+                <p class="text-sm opacity-90 mb-2"></p>
+                <h2 id="target-word" class="text-5xl md:text-6xl font-bold">...</h2>
+            </div>
+
+            <!-- HOME / ANA SAYFA TUŞU (Kelimenin Tam Altında Ortalı) -->
+            <div class="flex justify-center w-full">
+                <a href="../index.html" class="flex items-center gap-1 bg-amber-100 hover:bg-amber-200 text-amber-800 font-bold py-3.5 px-10 rounded-2xl transition-all duration-300 shadow-md border-b-4 border-amber-300 hover:scale-[1.03] active:scale-[0.97] text-xl">
+                    <!-- SVG Ev İkonu -->
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-10 w-10" fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M12.707 2.293a1 1 0 00-1.414 0l-9 9a1 1 0 101.414 1.414L4 12.414V21a1 1 0 001 1h5a1 1 0 001-1v-6h2v6a1 1 0 001 1h5a1 1 0 001-1v-8.586l1.293 1.293a1 1 0 001.414-1.414l-9-9z" />
+                    </svg>
+                    <span></span>
+                </a>
+            </div>
+
+            <!-- BİLDİRİM/MESAJ ALANI -->
+            <div id="message-box" class="message-area"></div>
+        </div>
+
+        <!-- MODAL ALANI -->
+        <div id="overlay" class="fixed inset-0 bg-slate-900/90 backdrop-blur-md flex items-center justify-center z-50 p-6">
+            <div class="bg-white rounded-[3.5rem] p-12 max-w-[40rem] w-full text-center shadow-2xl border border-slate-100 overflow-hidden transform transition-all duration-300">
+                <div id="modal-content" class="flex flex-col items-center">
+                    <div class="text-[8rem] mb-6 leading-none select-none filter drop-shadow-md">🥕</div>
+                    <h3 class="text-5xl font-extrabold mb-4 text-emerald-800 tracking-wide">أَهْلاً بِك!</h3>
+                    <p class="text-4xl text-slate-600 mb-10 leading-relaxed">اِخْتَر الصّورَة الصَّحيحَة حَسَب الكَلِمَة.</p>
+                    <button id="start-btn" class="bg-emerald-600 hover:bg-emerald-700 text-white font-normal py-5 px-12 rounded-2xl text-5xl transition-all duration-300 w-full shadow-lg hover:shadow-emerald-500/25 hover:scale-[1.02] active:scale-[0.98]">
+                        اِبْدَأ اللَّعِب
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Ses Sentezleyici Sınıfı
+        const SoundFX = {
+            ctx: null,
+            init() {
+                if (!this.ctx) {
+                    this.ctx = new (window.AudioContext || window.webkitAudioContext)();
+                }
+            },
+            play(freq, type, duration, vol = 0.1) {
+                this.init();
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+                
+                osc.type = type;
+                osc.frequency.setValueAtTime(freq, this.ctx.currentTime);
+                
+                gain.gain.setValueAtTime(vol, this.ctx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + duration);
+                
+                osc.connect(gain);
+                gain.connect(this.ctx.destination);
+                
+                osc.start();
+                osc.stop(this.ctx.currentTime + duration);
+            },
+            click() {
+                this.play(600, 'sine', 0.1, 0.05);
+            },
+            correct() {
+                this.play(523.25, 'sine', 0.1); // C5
+                setTimeout(() => this.play(659.25, 'sine', 0.2), 50); // E5
+            },
+            wrong() {
+                this.play(220, 'square', 0.3, 0.05); // A3
+            },
+            victory() {
+                const notes = [523, 659, 783, 1046];
+                notes.forEach((n, i) => {
+                    setTimeout(() => this.play(n, 'sine', 0.4), i * 150);
+                });
+            }
+        };
+
+        const gameData = [
+            { word: 'حَليب', img: 'S57_SÜT.png' },
+            { word: 'سُكَّر', img: 'S57_ŞEKETBİRPAKET.png' },
+            { word: 'مِلْح', img: 'S57_TUZ.png' },
+            { word: 'ماء', img: 'S57_SU.png' },
+            { word: 'خُبْز', img: 'S57_EKMEK.png' },
+            { word: 'شاي', img: 'S57_BİRPAKETYEŞİLÇAY.png' },
+            { word: 'عَسَل', img: 'S57_BAL.png' },
+        ];
+
+        let score = 0;
+        let timeLeft = 60;
+        let gameActive = false;
+        let currentTarget = null;
+        let currentOptions = [];
+        let timerInterval;
+        let shuffleInterval;
+        let remainingWords = [];
+
+        const items = document.querySelectorAll('.item');
+        const scoreEl = document.getElementById('score');
+        const timerEl = document.getElementById('timer');
+        const wordEl = document.getElementById('target-word');
+        const messageBox = document.getElementById('message-box');
+        const overlay = document.getElementById('overlay');
+        const startBtn = document.getElementById('start-btn');
+        const modalContent = document.getElementById('modal-content');
+
+        function initGame() {
+            SoundFX.init(); 
+
+            // k1.mp3 dosyasını çalma tetikleyicisi
+            try {
+                const startAudio = new Audio('k1.mp3');
+                startAudio.play().catch(e => console.log("Ses oynatma hatası:", e));
+            } catch (err) {
+                console.log("Ses yükleme hatası:", err);
+            }
+
+            score = 0;
+            timeLeft = 60;
+            remainingWords = [...gameData];
+            scoreEl.textContent = score;
+            timerEl.textContent = timeLeft;
+            overlay.classList.add('hidden');
+            gameActive = true;
+            
+            startTimer();
+            startNewTurn();
+        }
+
+        function startTimer() {
+            clearInterval(timerInterval);
+            timerInterval = setInterval(() => {
+                timeLeft--;
+                timerEl.textContent = timeLeft;
+                if (timeLeft <= 0) endGame("timeout");
+            }, 1000);
+        }
+
+        function endGame(reason) {
+            gameActive = false;
+            clearInterval(timerInterval);
+            clearInterval(shuffleInterval);
+            hideAll();
+            
+            overlay.classList.remove('hidden');
+            let title = reason === "complete" ? "أَحْسَنْت! اِنْتَهَتْ جَميع الكَلِمات" : "اِنْتَهى الوَقْت!";
+            let icon = reason === "complete" ? "🏆" : "⌛";
+
+            if (reason === "complete") SoundFX.victory();
+
+            modalContent.innerHTML = `
+                <div class="text-[8rem] mb-6 leading-none select-none filter drop-shadow-md">${icon}</div>
+                <h3 class="text-4xl font-extrabold mb-4 text-emerald-800">${title}</h3>
+                <p class="text-2xl text-slate-600 mb-10 leading-relaxed">دَرَجَتُك النِّهائِيَّة: <span class="font-black text-emerald-600 text-5xl mx-2">${score}</span></p>
+                <button onclick="location.reload()" class="bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold py-5 px-12 rounded-2xl text-3xl transition-all duration-300 w-full shadow-lg hover:shadow-emerald-500/25 hover:scale-[1.02] active:scale-[0.98]">
+                    اِلْعَبْ مَرَّةً أُخْرى
+                </button>
+            `;
+        }
+
+        function hideAll() {
+            items.forEach(item => {
+                item.classList.remove('up');
+                item.innerHTML = ''; 
+            });
+        }
+
+        function startNewTurn() {
+            if (!gameActive) return;
+            if (remainingWords.length === 0) {
+                endGame("complete");
+                return;
+            }
+
+            clearInterval(shuffleInterval);
+            messageBox.textContent = "";
+
+            const randomIndex = Math.floor(Math.random() * remainingWords.length);
+            currentTarget = remainingWords[randomIndex];
+            remainingWords.splice(randomIndex, 1);
+            wordEl.textContent = currentTarget.word;
+
+            let distractors = gameData.filter(d => d.word !== currentTarget.word);
+            distractors = distractors.sort(() => 0.5 - Math.random()).slice(0, 2);
+
+            currentOptions = [
+                { data: currentTarget, correct: true },
+                { data: distractors[0], correct: false },
+                { data: distractors[1], correct: false }
+            ];
+
+            shufflePositions();
+            shuffleInterval = setInterval(shufflePositions, 5000);
+        }
+
+        function shufflePositions() {
+            if (!gameActive) return;
+            hideAll();
+
+            setTimeout(() => {
+                if (!gameActive) return;
+
+                let availableHoles = Array.from({length: 9}, (_, i) => i);
+                let selectedHoles = [];
+                for(let i=0; i<3; i++) {
+                    const r = Math.floor(Math.random() * availableHoles.length);
+                    selectedHoles.push(availableHoles.splice(r, 1)[0]);
+                }
+
+                const shuffledOptions = [...currentOptions].sort(() => 0.5 - Math.random());
+
+                selectedHoles.forEach((holeIdx, i) => {
+                    const itemEl = items[holeIdx];
+                    const data = shuffledOptions[i].data;
+                    
+                    const img = document.createElement('img');
+                    img.src = data.img;
+                    img.alt = data.word;
+                    img.onerror = function() {
+                        this.style.display = 'none';
+                        const err = document.createElement('div');
+                        err.className = 'text-[10px] text-gray-500 font-bold p-1 text-center';
+                        err.innerHTML = `⚠️<br>${data.img}`;
+                        itemEl.appendChild(err);
+                    };
+                    
+                    itemEl.innerHTML = ''; 
+                    itemEl.appendChild(img);
+                    itemEl.dataset.correct = shuffledOptions[i].correct;
+                    itemEl.classList.add('up');
+                });
+            }, 500); 
+        }
+
+        function handleSelection(e) {
+            if (!gameActive) return;
+            let item = e.target;
+            if (!item.classList.contains('item')) {
+                item = item.closest('.item');
+            }
+            if (!item || !item.classList.contains('up')) return;
+
+            SoundFX.click(); 
+
+            if (item.dataset.correct === 'true') {
+                SoundFX.correct(); 
+                clearInterval(shuffleInterval);
+                score += 10;
+                scoreEl.textContent = score;
+                messageBox.innerHTML = "<span class='text-green-500'>مُمْتاز! ✓ +١٠</span>";
+                item.parentElement.classList.add('correct-animation');
+                setTimeout(() => {
+                    item.parentElement.classList.remove('correct-animation');
+                    startNewTurn();
+                }, 600);
+            } else {
+                SoundFX.wrong(); 
+                messageBox.innerHTML = "<span class='text-red-500'>حَاوِلْ مَرَّةً أُخْرى! ✗</span>";
+                item.parentElement.classList.add('wrong-shake');
+                setTimeout(() => item.parentElement.classList.remove('wrong-shake'), 400);
+            }
+        }
+
+        items.forEach(item => {
+            item.addEventListener('click', handleSelection);
+            item.addEventListener('touchstart', (e) => {
+                handleSelection(e);
+            }, {passive: true});
+        });
+
+        startBtn.addEventListener('click', initGame);
+    </script>
+</body>
+</html>
