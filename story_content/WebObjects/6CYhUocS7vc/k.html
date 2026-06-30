@@ -17,7 +17,8 @@
 
         /* Ekranın kaymasını engelleyen temel ayarlar */
         html, body {
-            height: 100%;
+            height: 100vh;
+            width: 100%;
             margin: 0;
             padding: 0;
             overflow: hidden;
@@ -25,12 +26,12 @@
             font-family: 'arakom', 'Noto Sans Arabic', sans-serif;
         }
 
-        /* 1920x1080 Yatay Düzen (Side-by-Side) */
+        /* %100 Genişlik ve 100vh Yükseklik Düzeni (Yan yana dizilim) */
         .game-wrapper {
             height: 100vh;
-            width: 100vw;
+            width: 100%;
             display: flex;
-            flex-direction: row; /* Yan yana dizilim */
+            flex-direction: row;
             align-items: center;
             justify-content: space-around;
             padding: 2vh 4vw;
@@ -154,12 +155,46 @@
         h1, h2, h3, button, a, .status-text {
             font-family: 'arakom', 'Noto Sans Arabic', sans-serif;
         }
+
+        /* Küçük ekranlar ve Mobil Cihazlar için Uyumluluk */
+        @media (max-width: 1024px) {
+            html, body {
+                overflow: auto;
+            }
+            .game-wrapper {
+                flex-direction: column-reverse;
+                height: auto;
+                min-height: 100vh;
+                padding: 3vh 3vw;
+                justify-content: center;
+                gap: 3vh;
+            }
+            .info-panel {
+                width: 100%;
+                height: auto;
+                gap: 2vh;
+            }
+            .game-panel {
+                width: 100%;
+                height: auto;
+            }
+            .grid-area {
+                height: 50vh;
+                max-width: 90vw;
+                padding: 2vh;
+                border-radius: 2rem;
+            }
+            .target-container {
+                height: 15vh;
+                border-radius: 1.5rem;
+            }
+        }
     </style>
 </head>
 <body>
 
     <div class="game-wrapper">
-        <!-- SAĞ TARAF: OYUN ALANI (RTL olduğu için ilk çocuk sağda görünür) -->
+        <!-- SAĞ TARAF: OYUN ALANI -->
         <div class="game-panel">
             <div class="grid-area">
                 <div class="hole"><div class="item"></div></div>
@@ -181,11 +216,11 @@
                 <div class="flex justify-center gap-6 w-full">
                     <div class="bg-white flex-1 p-3 rounded-2xl shadow-sm border-b-4 border-green-200 text-center max-w-[150px]">
                         <p class="text-sm text-gray-400 font-bold">النَّتيجَة</p>
-                        <p id="score" class="text-2xl font-bold text-green-600">0</p>
+                        <p id="score" class="text-2xl font-bold text-green-600">٠</p>
                     </div>
                     <div class="bg-white flex-1 p-3 rounded-2xl shadow-sm border-b-4 border-red-200 text-center max-w-[150px]">
                         <p class="text-sm text-gray-400 font-bold">الوَقْت</p>
-                        <p id="timer" class="text-2xl font-bold text-red-600">60</p>
+                        <p id="timer" class="text-2xl font-bold text-red-600">٦٠</p>
                     </div>
                 </div>
             </header>
@@ -196,15 +231,27 @@
                 <h2 id="target-word" class="text-5xl md:text-6xl font-bold">...</h2>
             </div>
 
-            <!-- HOME / ANA SAYFA TUŞU (Kelimenin Tam Altında Ortalı) -->
-            <div class="flex justify-center w-full">
-                <a href="../index.html" class="flex items-center gap-1 bg-amber-100 hover:bg-amber-200 text-amber-800 font-bold py-3.5 px-10 rounded-2xl transition-all duration-300 shadow-md border-b-4 border-amber-300 hover:scale-[1.03] active:scale-[0.97] text-xl">
+            <!-- KONTROL / YÖNLENDİRME TUŞLARI -->
+            <div class="flex justify-center gap-4 w-full max-w-[320px]">
+                <!-- HOME / ANA SAYFA TUŞU -->
+                <a href="index.html" class="flex-1 flex items-center justify-center bg-amber-100 hover:bg-amber-200 text-amber-800 font-bold py-3.5 rounded-2xl transition-all duration-300 shadow-md border-b-4 border-amber-300 hover:scale-[1.03] active:scale-[0.97] text-xl" title="Ana Sayfa">
                     <!-- SVG Ev İkonu -->
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-10 w-10" fill="currentColor" viewBox="0 0 24 24">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-9 w-9" fill="currentColor" viewBox="0 0 24 24">
                         <path d="M12.707 2.293a1 1 0 00-1.414 0l-9 9a1 1 0 101.414 1.414L4 12.414V21a1 1 0 001 1h5a1 1 0 001-1v-6h2v6a1 1 0 001 1h5a1 1 0 001-1v-8.586l1.293 1.293a1 1 0 001.414-1.414l-9-9z" />
                     </svg>
-                    <span></span>
                 </a>
+
+                <!-- TAM EKRAN AÇ / KAPAT TUŞU -->
+                <button id="fullscreen-btn" class="flex-1 flex items-center justify-center bg-blue-100 hover:bg-blue-200 text-blue-800 font-bold py-3.5 rounded-2xl transition-all duration-300 shadow-md border-b-4 border-blue-300 hover:scale-[1.03] active:scale-[0.97] text-xl" title="Tam Ekran">
+                    <!-- Tam Ekran Yap (Giriş) İkonu -->
+                    <svg id="fullscreen-icon-enter" xmlns="http://www.w3.org/2000/svg" class="h-9 w-9" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M4 8V4m0 0h4M4 4l5 5m11-5h-4m4 0v4m0-4l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4" />
+                    </svg>
+                    <!-- Tam Ekrandan Çık (Çıkış) İkonu -->
+                    <svg id="fullscreen-icon-exit" xmlns="http://www.w3.org/2000/svg" class="h-9 w-9 hidden" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M4 14h6m0 0v6m0-6l-5 5m15-5h-6m0 0v6m0-6l5 5M4 10h6m0 0V4m0 6l-5-5m15 5h-6m0 0V4m0 6l5-5" />
+                    </svg>
+                </button>
             </div>
 
             <!-- BİLDİRİM/MESAJ ALANI -->
@@ -227,6 +274,12 @@
     </div>
 
     <script>
+        // Sayıları Arapça-Doğu Rakamlarına Dönüştüren Fonksiyon
+        function toArabicDigits(num) {
+            const arabicDigits = ['٠', '١', '٢', '٣', '٤', '٥', '٦', '٧', '٨', '٩'];
+            return String(num).replace(/[0-9]/g, w => arabicDigits[+w]);
+        }
+
         // Ses Sentezleyici Sınıfı
         const SoundFX = {
             ctx: null,
@@ -271,13 +324,13 @@
         };
 
         const gameData = [
-            { word: 'حَليب', img: 'S57_SÜT.png' },
-            { word: 'سُكَّر', img: 'S57_ŞEKETBİRPAKET.png' },
-            { word: 'مِلْح', img: 'S57_TUZ.png' },
-            { word: 'ماء', img: 'S57_SU.png' },
-            { word: 'خُبْز', img: 'S57_EKMEK.png' },
-            { word: 'شاي', img: 'S57_BİRPAKETYEŞİLÇAY.png' },
-            { word: 'عَسَل', img: 'S57_BAL.png' },
+            { word: 'حَليب', img: 'a.png' },
+            { word: 'سُكَّر', img: 'b.png' },
+            { word: 'مِلْح', img: 'c.png' },
+            { word: 'ماء', img: 'd.png' },
+            { word: 'خُبْز', img: 'e.png' },
+            { word: 'شاي', img: 'f.png' },
+            { word: 'عَسَل', img: 'g.png' },
         ];
 
         let score = 0;
@@ -297,6 +350,48 @@
         const overlay = document.getElementById('overlay');
         const startBtn = document.getElementById('start-btn');
         const modalContent = document.getElementById('modal-content');
+        const fullscreenBtn = document.getElementById('fullscreen-btn');
+        const enterIcon = document.getElementById('fullscreen-icon-enter');
+        const exitIcon = document.getElementById('fullscreen-icon-exit');
+
+        // Tarayıcıyı Tam Ekran Moduna Geçiren Yardımcı Fonksiyon
+        function enterFullscreen() {
+            const docElm = document.documentElement;
+            if (docElm.requestFullscreen) {
+                docElm.requestFullscreen().catch(err => console.log("Tam ekran hatası:", err));
+            } else if (docElm.mozRequestFullScreen) { // Firefox
+                docElm.mozRequestFullScreen().catch(err => console.log(err));
+            } else if (docElm.webkitRequestFullscreen) { // Chrome, Safari ve Opera
+                docElm.webkitRequestFullscreen().catch(err => console.log(err));
+            } else if (docElm.msRequestFullscreen) { // IE/Edge
+                docElm.msRequestFullscreen().catch(err => console.log(err));
+            }
+        }
+
+        // Tam Ekrandan Çıkan Yardımcı Fonksiyon
+        function exitFullscreen() {
+            if (document.exitFullscreen) {
+                document.exitFullscreen().catch(err => console.log("Tam ekrandan çıkış hatası:", err));
+            } else if (document.mozCancelFullScreen) { // Firefox
+                document.mozCancelFullScreen();
+            } else if (document.webkitExitFullscreen) { // Chrome, Safari ve Opera
+                document.webkitExitFullscreen();
+            } else if (document.msExitFullscreen) { // IE/Edge
+                document.msExitFullscreen();
+            }
+        }
+
+        // Tam Ekran Durumuna Göre İkonları Değiştirme Fonksiyonu
+        function updateFullscreenUI() {
+            const isFullscreen = !!(document.fullscreenElement || document.webkitFullscreenElement || document.mozFullScreenElement || document.msFullscreenElement);
+            if (isFullscreen) {
+                enterIcon.classList.add('hidden');
+                exitIcon.classList.remove('hidden');
+            } else {
+                enterIcon.classList.remove('hidden');
+                exitIcon.classList.add('hidden');
+            }
+        }
 
         function initGame() {
             SoundFX.init(); 
@@ -312,8 +407,8 @@
             score = 0;
             timeLeft = 60;
             remainingWords = [...gameData];
-            scoreEl.textContent = score;
-            timerEl.textContent = timeLeft;
+            scoreEl.textContent = toArabicDigits(score);
+            timerEl.textContent = toArabicDigits(timeLeft);
             overlay.classList.add('hidden');
             gameActive = true;
             
@@ -325,7 +420,7 @@
             clearInterval(timerInterval);
             timerInterval = setInterval(() => {
                 timeLeft--;
-                timerEl.textContent = timeLeft;
+                timerEl.textContent = toArabicDigits(timeLeft);
                 if (timeLeft <= 0) endGame("timeout");
             }, 1000);
         }
@@ -345,7 +440,7 @@
             modalContent.innerHTML = `
                 <div class="text-[8rem] mb-6 leading-none select-none filter drop-shadow-md">${icon}</div>
                 <h3 class="text-4xl font-extrabold mb-4 text-emerald-800">${title}</h3>
-                <p class="text-2xl text-slate-600 mb-10 leading-relaxed">دَرَجَتُك النِّهائِيَّة: <span class="font-black text-emerald-600 text-5xl mx-2">${score}</span></p>
+                <p class="text-2xl text-slate-600 mb-10 leading-relaxed">دَرَجَتُك النِّهائِيَّة: <span class="font-black text-emerald-600 text-5xl mx-2">${toArabicDigits(score)}</span></p>
                 <button onclick="location.reload()" class="bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold py-5 px-12 rounded-2xl text-3xl transition-all duration-300 w-full shadow-lg hover:shadow-emerald-500/25 hover:scale-[1.02] active:scale-[0.98]">
                     اِلْعَبْ مَرَّةً أُخْرى
                 </button>
@@ -440,7 +535,7 @@
                 SoundFX.correct(); 
                 clearInterval(shuffleInterval);
                 score += 10;
-                scoreEl.textContent = score;
+                scoreEl.textContent = toArabicDigits(score);
                 messageBox.innerHTML = "<span class='text-green-500'>مُمْتاز! ✓ +١٠</span>";
                 item.parentElement.classList.add('correct-animation');
                 setTimeout(() => {
@@ -449,7 +544,7 @@
                 }, 600);
             } else {
                 SoundFX.wrong(); 
-                messageBox.innerHTML = "<span class='text-red-500'>حَاوِلْ مَرَّةً أُخْرى! ✗</span>";
+                messageBox.innerHTML = "<span class='text-red-500'>حاوِلْ مَرَّةً أُخْرى! ✗</span>";
                 item.parentElement.classList.add('wrong-shake');
                 setTimeout(() => item.parentElement.classList.remove('wrong-shake'), 400);
             }
@@ -462,7 +557,28 @@
             }, {passive: true});
         });
 
-        startBtn.addEventListener('click', initGame);
+        // Oyunu başlata tıklayınca tam ekrana geçip oyunu başlatan event listener
+        startBtn.addEventListener('click', () => {
+            enterFullscreen();
+            initGame();
+        });
+
+        // Tam ekran butonunun tıklama aksiyonu
+        fullscreenBtn.addEventListener('click', () => {
+            SoundFX.click();
+            const isFullscreen = !!(document.fullscreenElement || document.webkitFullscreenElement || document.mozFullScreenElement || document.msFullscreenElement);
+            if (isFullscreen) {
+                exitFullscreen();
+            } else {
+                enterFullscreen();
+            }
+        });
+
+        // Fullscreen API durum değişimi dinleyicileri (Klavye ESC ile çıkılsa dahi buton senkronize kalır)
+        document.addEventListener('fullscreenchange', updateFullscreenUI);
+        document.addEventListener('webkitfullscreenchange', updateFullscreenUI);
+        document.addEventListener('mozfullscreenchange', updateFullscreenUI);
+        document.addEventListener('MSFullscreenChange', updateFullscreenUI);
     </script>
 </body>
 </html>
